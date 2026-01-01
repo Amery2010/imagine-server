@@ -40,13 +40,8 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
-          secrets: |
-            API_TOKEN
-            HUGGINGFACE_TOKENS
-            GITEE_TOKENS
-            MODELSCOPE_TOKENS
         env:
-          API_TOKEN: ${{ secrets.API_TOKEN }}
-          HUGGINGFACE_TOKENS: ${{ secrets.HUGGINGFACE_TOKENS }}
-          GITEE_TOKENS: ${{ secrets.GITEE_TOKENS }}
-          MODELSCOPE_TOKENS: ${{ secrets.MODELSCOPE_TOKENS }}
+          API_TOKEN: ${{ secrets.API_TOKEN || '' }}
+          HUGGINGFACE_TOKENS: ${{ secrets.HUGGINGFACE_TOKENS || '' }}
+          GITEE_TOKENS: ${{ secrets.GITEE_TOKENS || '' }}
+          MODELSCOPE_TOKENS: ${{ secrets.MODELSCOPE_TOKENS || '' }}

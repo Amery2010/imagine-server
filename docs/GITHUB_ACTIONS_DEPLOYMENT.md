@@ -141,20 +141,62 @@ pnpm run wrangler kv:namespace create "VIDEO_TASK_KV" --preview
 
 进入 GitHub 仓库的 **Settings** → **Secrets and variables** → **Actions**，添加以下 Secrets：
 
-| Secret 名称             | 说明                                | 获取方式                                                   |
-| ----------------------- | ----------------------------------- | ---------------------------------------------------------- |
-| `CLOUDFLARE_API_TOKEN`  | Cloudflare API Token                | 步骤 1 获取                                                |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Account ID               | 步骤 2 获取                                                |
-| `API_TOKEN`             | 应用 API 访问令牌                   | 自定义生成                                                 |
-| `HUGGINGFACE_TOKENS`    | Hugging Face API Tokens（逗号分隔） | [Hugging Face](https://huggingface.co/settings/tokens)     |
-| `GITEE_TOKENS`          | Gitee AI API Tokens（逗号分隔）     | [Gitee AI](https://ai.gitee.com/dashboard/settings/tokens) |
-| `MODELSCOPE_TOKENS`     | Model Scope API Tokens（逗号分隔）  | [Model Scope](https://modelscope.cn/my/myaccesstoken)      |
+| Secret 名称             | 说明                                | 必需 | 获取方式                                                   |
+| ----------------------- | ----------------------------------- | ---- | ---------------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`  | Cloudflare API Token                | ✅   | 步骤 1 获取                                                |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Account ID               | ✅   | 步骤 2 获取                                                |
+| `API_TOKEN`             | 应用 API 访问令牌                   | ⚠️   | 自定义生成（可选，不设置则不需要认证）                     |
+| `HUGGINGFACE_TOKENS`    | Hugging Face API Tokens（逗号分隔） | ⚠️   | [Hugging Face](https://huggingface.co/settings/tokens)     |
+| `GITEE_TOKENS`          | Gitee AI API Tokens（逗号分隔）     | ⚠️   | [Gitee AI](https://ai.gitee.com/dashboard/settings/tokens) |
+| `MODELSCOPE_TOKENS`     | Model Scope API Tokens（逗号分隔）  | ⚠️   | [Model Scope](https://modelscope.cn/my/myaccesstoken)      |
+
+**说明**：
+
+- ✅ 必需：必须配置才能部署
+- ⚠️ 可选：不配置也可以部署，但功能会受限
+  - `API_TOKEN` 不配置时，API 不需要认证即可访问
+  - Provider tokens 不配置时，对应的模型将不可用
 
 **KV Namespace IDs 配置说明**：
 
 GitHub Actions 会在部署时自动将这些 ID 注入到 `wrangler.toml` 中，无需手动修改配置文件。
 
-### 二、Vercel 部署配置
+### 四、GitHub Pages 部署配置
+
+#### 1. 启用 GitHub Pages
+
+1. 进入 GitHub 仓库的 **Settings** → **Pages**
+2. 在 **Source** 部分，选择 **GitHub Actions**
+3. 保存设置
+
+#### 2. 触发部署
+
+推送到 `main` 分支会自动触发文档部署：
+
+```bash
+git add .
+git commit -m "Update documentation"
+git push origin main
+```
+
+#### 3. 访问文档站点
+
+部署成功后，文档将发布到：
+
+```
+https://<your-username>.github.io/<repository-name>/
+```
+
+#### 4. 故障排查
+
+如果遇到 "Get Pages site failed" 错误：
+
+1. 确认已在 **Settings** → **Pages** 中启用 GitHub Pages
+2. 确认 Source 设置为 **GitHub Actions**（不是 Deploy from a branch）
+3. 检查仓库是否为公开仓库（私有仓库需要 GitHub Pro）
+4. 等待几分钟后重试，GitHub Pages 初次启用可能需要时间
+
+### 三、Vercel 部署配置
 
 #### 1. 获取 Vercel Token
 
@@ -411,7 +453,38 @@ pnpm run wrangler tail
 
 ## 故障排查
 
+### GitHub Pages 部署失败
+
+**错误**: "Get Pages site failed. Please verify that the repository has Pages enabled"
+
+**解决方案**:
+
+1. 进入 **Settings** → **Pages**
+2. 在 **Source** 部分选择 **GitHub Actions**（不是 Deploy from a branch）
+3. 确保仓库是公开的，或者你有 GitHub Pro（私有仓库需要）
+4. 保存后等待几分钟，然后重新运行工作流
+
+### Docker 镜像推送失败
+
+**错误**: "denied: permission_denied: write_package"
+
+**解决方案**:
+
+1. 检查工作流文件中的 `permissions` 配置是否包含 `packages: write`
+2. 确认 GitHub Actions 有权限访问 GitHub Container Registry
+3. 如果是 fork 的仓库，需要在自己的仓库中重新配置
+
 ### Cloudflare 部署失败
+
+**错误**: "Value for secret GITEE_TOKENS not found in environment"
+
+**解决方案**:
+
+1. 这些 secrets 现在是可选的，不配置也可以部署
+2. 如果要使用对应的 provider，需要在 GitHub Secrets 中配置相应的 token
+3. 不配置某个 provider 的 token，该 provider 的模型将不可用
+
+**其他常见问题**:
 
 1. 检查 `CLOUDFLARE_API_TOKEN` 和 `CLOUDFLARE_ACCOUNT_ID` 是否正确
 2. 确认 API Token 有足够的权限
