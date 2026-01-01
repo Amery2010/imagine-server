@@ -1,7 +1,11 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { proxyRequest, getAvailableModels } from "./api/imagine";
+import {
+  proxyRequest,
+  getAvailableModels,
+  getAvailableModelsFiltered,
+} from "./api/imagine";
 import {
   getTokenStatsHandler,
   getAllTokenStatsHandler,
@@ -80,8 +84,14 @@ app.use("/v1/*", async (c, next) => {
   await next();
 });
 
-// 获取可用模型列表
-app.get("/v1/models", (c) => {
+// 获取可用模型列表（根据 token 可用性动态过滤）
+app.get("/v1/models", async (c) => {
+  const models = await getAvailableModelsFiltered(c.env);
+  return c.json(models);
+});
+
+// 获取所有模型列表（不过滤，用于管理和调试）
+app.get("/v1/models/all", (c) => {
   const models = getAvailableModels();
   return c.json(models);
 });

@@ -116,7 +116,7 @@ export function getTokens(provider: Provider, env: Bindings): string[] {
 }
 
 /**
- * 获取下一个可用的 Token
+ * 获取下一个可用的 Token（随机选择）
  */
 async function getNextAvailableToken(
   provider: Provider,
@@ -125,14 +125,23 @@ async function getNextAvailableToken(
   const tokens = getTokens(provider, env);
 
   if (!env.storage) {
-    console.warn("[TokenManager] Storage not available, returning first token");
-    return tokens[0] || null;
+    console.warn(
+      "[TokenManager] Storage not available, returning random token"
+    );
+    if (tokens.length === 0) return null;
+    // 随机返回一个 token
+    return tokens[Math.floor(Math.random() * tokens.length)];
   }
 
   const store = await getTokenStatusStore(provider, env.storage);
 
-  // 返回第一个未被标记为耗尽的 Token
-  return tokens.find((t) => !store.exhausted[t]) || null;
+  // 获取所有未被标记为耗尽的 Token
+  const availableTokens = tokens.filter((t) => !store.exhausted[t]);
+
+  if (availableTokens.length === 0) return null;
+
+  // 从可用 tokens 中随机选择一个
+  return availableTokens[Math.floor(Math.random() * availableTokens.length)];
 }
 
 /**
@@ -286,6 +295,32 @@ export async function resetTokenStatus(
 
   await saveTokenStatusStore(provider, store, env.storage);
   console.log(`[TokenManager] Reset token status for ${provider}`);
+}
+
+/**
+ * 检查指定 provider 是否有可用的 token
+ */
+export async function hasAvailableToken(
+  provider: Provider,
+  env: Bindings
+): Promise<boolean> {
+  const tokens = getTokens(provider, env);
+
+  // 如果没有配置 token
+  if (tokens.length === 0) {
+    // Hugging Face 支持无 token 访问
+    return provider === "huggingface";
+  }
+
+  // 如果没有存储，假设所有 token 都可用
+  if (!env.storage) {
+    return true;
+  }
+
+  const store = await getTokenStatusStore(provider, env.storage);
+
+  // 检查是否至少有一个未耗尽的 token
+  return tokens.some((t) => !store.exhausted[t]);
 }
 
 /**

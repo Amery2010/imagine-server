@@ -1,10 +1,14 @@
 import type { Context } from "hono";
-import { providerRegistry, getAvailableModels } from "../providers";
+import {
+  providerRegistry,
+  getAvailableModels,
+  getAvailableModelsFiltered,
+} from "../providers";
 
 /**
  * 获取所有可用模型列表
  */
-export { getAvailableModels };
+export { getAvailableModels, getAvailableModelsFiltered };
 
 /**
  * 统一的 AI 服务代理 API

@@ -185,9 +185,9 @@ cat .vercel/project.json
 
 方法二：通过 Vercel Dashboard
 
-1. 进入项目的 **Settings** → **General**
-2. 在页面底部找到 **Project ID**
-3. Organization ID 可以在 URL 中找到：`https://vercel.com/<org-id>/<project-name>`
+1. 进入项目的 [**Account Settings** → **Tokens**](https://vercel.com/account/settings/tokens)
+2. Organization ID 可以在 **Settings** → **General** → **Team ID**
+3. Project ID 可以在 vercel 项目中的 **Settings** → **General** → **Project ID**
 
 #### 3. 配置 Vercel 环境变量
 
@@ -212,7 +212,9 @@ cat .vercel/project.json
 | ------------------- | ---------------------- | ----------- |
 | `VERCEL_TOKEN`      | Vercel API Token       | 步骤 1 获取 |
 | `VERCEL_ORG_ID`     | Vercel Organization ID | 步骤 2 获取 |
-| `VERCEL_PROJECT_ID` | Vercel Project ID      | 步骤 2 获取 |
+| `VERCEL_PROJECT_ID` | Vercel Project ID      | 步骤 3 获取 |
+
+**推荐使用 Vercel CLI 进行获取**
 
 ## 部署流程
 

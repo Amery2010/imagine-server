@@ -59,3 +59,6 @@ export * from "./utils";
 export { GiteeProvider } from "./gitee";
 export { HuggingFaceProvider } from "./huggingface";
 export { ModelScopeProvider } from "./modelscope";
+
+// 导出模型列表相关函数
+export { getAvailableModels, getAvailableModelsFiltered } from "./registry";
