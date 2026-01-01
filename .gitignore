@@ -1,0 +1,63 @@
+# dev
+.yarn/
+!.yarn/releases
+.vscode/*
+!.vscode/launch.json
+!.vscode/*.code-snippets
+.idea/workspace.xml
+.idea/usage.statistics.xml
+.idea/shelf
+
+# deps
+node_modules/
+
+# env
+.env
+.env.*
+!.env.example
+.env.local
+.dev.vars
+!.dev.vars.example
+
+# logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+pm2-*.log
+
+# misc
+.DS_Store
+.vercel
+*.local
+
+# wrangler
+.wrangler/
+dist/
+.dev.vars
+
+# build
+*.tsbuildinfo
+.cache/
+
+# vitepress
+docs/.vitepress/dist
+docs/.vitepress/cache
+
+# testing
+coverage/
+.nyc_output/
+
+# temp
+*.tmp
+*.temp
+.temp/
+.tmp/
+
+# release
+release/
+*.tar.gz
+

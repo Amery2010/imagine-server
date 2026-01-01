@@ -1,0 +1,52 @@
+name: Deploy to Cloudflare Workers
+
+on:
+  # 当推送以 v 开头的标签时触发
+  push:
+    tags:
+      - "v*"
+
+  # 允许手动触发
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Cloudflare Workers
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+          secrets: |
+            API_TOKEN
+            HUGGINGFACE_TOKENS
+            GITEE_TOKENS
+            MODELSCOPE_TOKENS
+        env:
+          API_TOKEN: ${{ secrets.API_TOKEN }}
+          HUGGINGFACE_TOKENS: ${{ secrets.HUGGINGFACE_TOKENS }}
+          GITEE_TOKENS: ${{ secrets.GITEE_TOKENS }}
+          MODELSCOPE_TOKENS: ${{ secrets.MODELSCOPE_TOKENS }}

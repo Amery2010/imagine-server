@@ -1,0 +1,16 @@
+# Cloudflare Workers 本地开发环境变量
+# 复制此文件为 .dev.vars 并填入实际的值
+# .dev.vars 文件不会被提交到 git
+
+# API 访问控制（可选）
+API_TOKEN=your-secret-token-1,your-secret-token-2
+
+# AI 提供商 Token（必需，逗号分隔多个 Token）
+HUGGINGFACE_TOKENS=hf_token1,hf_token2,hf_token3
+GITEE_TOKENS=gitee_token1,gitee_token2
+MODELSCOPE_TOKENS=ms_token1,ms_token2
+
+# 注意：
+# 1. Cloudflare Workers 使用 KV binding，不需要配置 REDIS_URL
+# 2. 生产环境请使用 wrangler secret 命令设置敏感信息
+# 3. 本文件仅用于本地开发

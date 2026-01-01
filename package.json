@@ -1,0 +1,67 @@
+{
+  "name": "imagine-server",
+  "version": "1.0.0",
+  "description": "Unified AI Image Generation API with multi-provider support (Hugging Face, Gitee AI, ModelScope)",
+  "author": "Amery2010",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Amery2010/imagine-server.git"
+  },
+  "type": "module",
+  "main": "src/index.ts",
+  "keywords": [
+    "ai",
+    "image-generation",
+    "text-to-image",
+    "flux",
+    "stable-diffusion",
+    "huggingface",
+    "gitee-ai",
+    "modelscope",
+    "hono",
+    "api",
+    "cloudflare-workers",
+    "vercel",
+    "serverless"
+  ],
+  "scripts": {
+    "dev": "tsx watch server/server.ts",
+    "start": "NODE_ENV=production tsx server/server.ts",
+    "build": "tsc && fix-esm-import-path dist",
+    "type-check": "tsc --noEmit",
+    "package": "tsx scripts/package.ts",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "vercel:dev": "vercel dev",
+    "vercel:build": "vercel build",
+    "vercel:deploy": "vercel deploy",
+    "vercel:prod": "vercel deploy --prod",
+    "wrangler:dev": "wrangler dev",
+    "wrangler:deploy": "wrangler deploy",
+    "wrangler:tail": "wrangler tail"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.7",
+    "@upstash/redis": "^1.36.0",
+    "dotenv": "^17.2.3",
+    "hono": "^4.11.3",
+    "ioredis": "^5.8.2",
+    "unstorage": "^1.17.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20251229.0",
+    "@lando/vitepress-theme-default-plus": "^1.1.1",
+    "@types/node": "^20.11.17",
+    "fix-esm-import-path": "^1.10.3",
+    "tsx": "^4.7.1",
+    "typescript": "^5.8.3",
+    "vitepress": "^1.6.4",
+    "vue": "^3.5.26",
+    "wrangler": "^4.54.0"
+  }
+}

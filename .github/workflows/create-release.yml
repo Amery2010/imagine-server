@@ -1,0 +1,34 @@
+name: Create GitHub Release
+
+on:
+  # 当推送以 v 开头的标签时触发
+  push:
+    tags:
+      - "v*"
+
+  # 允许手动触发
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create GitHub Release
+        uses: taiki-e/create-gh-release-action@v1
+        with:
+          # 从 docs/CHANGELOG.md 提取发布说明
+          changelog: docs/CHANGELOG.md
+          # 允许更新已存在的 release
+          allow-missing-changelog: false
+          # 分支限制（可选）
+          branch: main
+          # 标题格式
+          title: $version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

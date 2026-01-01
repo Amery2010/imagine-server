@@ -1,0 +1,123 @@
+# Cloudflare Workers 配置
+# Imagine Server - Cloudflare Workers Deployment
+
+name = "imagine-server"
+main = "src/index.ts"
+compatibility_date = "2025-12-18"
+compatibility_flags = ["nodejs_compat"]
+
+# 账户信息（可选，如果有多个账户）
+# account_id = "your-account-id"
+
+# KV Namespaces
+# Token 状态存储 - 用于管理 AI 提供商的 Token 状态
+[[kv_namespaces]]
+binding = "TOKEN_STATUS_KV"
+id = "e8873180969f481fb8e3d90b42d8c028"  # 本地开发：运行 wrangler kv:namespace create "TOKEN_STATUS_KV" 获取
+preview_id = "e8873180969f481fb8e3d90b42d8c028"  # 本地开发：运行 wrangler kv:namespace create "TOKEN_STATUS_KV" --preview 获取
+
+# 视频任务存储 - 用于存储异步视频生成任务状态
+[[kv_namespaces]]
+binding = "VIDEO_TASK_KV"
+id = "e8873180969f481fb8e3d90b42d8c028"  # 本地开发：运行 wrangler kv:namespace create "VIDEO_TASK_KV" 获取
+preview_id = "e8873180969f481fb8e3d90b42d8c028"  # 本地开发：运行 wrangler kv:namespace create "VIDEO_TASK_KV" --preview 获取
+
+# 环境变量
+[vars]
+NODE_ENV = "production"
+
+# 启用日志
+[observability]
+[observability.logs]
+enabled = false
+head_sampling_rate = 1
+invocation_logs = true
+persist = true
+
+# 敏感信息请使用 wrangler secret 命令设置，不要直接写在这里
+# 示例：
+# wrangler secret put API_TOKEN
+# wrangler secret put HUGGINGFACE_TOKENS
+# wrangler secret put GITEE_TOKENS
+# wrangler secret put MODELSCOPE_TOKENS
+
+# 或者在开发环境使用 .dev.vars 文件（不要提交到 git）
+# .dev.vars 文件格式：
+# API_TOKEN=your-secret-token
+# HUGGINGFACE_TOKENS=hf_token1,hf_token2
+# GITEE_TOKENS=gitee_token1,gitee_token2
+# MODELSCOPE_TOKENS=ms_token1,ms_token2
+
+# 限制配置
+# [limits]
+# cpu_ms = 120000  # CPU 时间限制（毫秒）
+
+# 部署配置
+[env.production]
+name = "imagine-server"
+workers_dev = false
+
+[env.production.vars]
+NODE_ENV = "production"
+
+# 开发环境配置
+[env.development]
+name = "imagine-server-dev"
+workers_dev = true
+
+[env.development.vars]
+NODE_ENV = "development"
+
+# ============================================
+# 设置说明
+# ============================================
+
+# 1. 创建 KV Namespaces:
+#    pnpm run wrangler kv:namespace create "TOKEN_STATUS_KV"
+#    pnpm run wrangler kv:namespace create "TOKEN_STATUS_KV" --preview
+#    pnpm run wrangler kv:namespace create "VIDEO_TASK_KV"
+#    pnpm run wrangler kv:namespace create "VIDEO_TASK_KV" --preview
+#
+#    将生成的 ID 填入上面的 id 和 preview_id 字段
+
+# 2. 设置 Secrets（推荐方式）:
+#    pnpm run wrangler secret put API_TOKEN
+#    pnpm run wrangler secret put HUGGINGFACE_TOKENS
+#    pnpm run wrangler secret put GITEE_TOKENS
+#    pnpm run wrangler secret put MODELSCOPE_TOKENS
+
+# 3. 本地开发:
+#    创建 .dev.vars 文件（不要提交到 git）
+#    添加环境变量：
+#    API_TOKEN=your-secret-token
+#    HUGGINGFACE_TOKENS=hf_token1,hf_token2
+#    GITEE_TOKENS=gitee_token1,gitee_token2
+#    MODELSCOPE_TOKENS=ms_token1,ms_token2
+
+# 4. 部署:
+#    pnpm run wrangler:deploy
+
+# 5. 查看日志:
+#    pnpm run wrangler:tail
+
+# ============================================
+# 常用命令
+# ============================================
+
+# 登录 Cloudflare
+# pnpm run wrangler login
+
+# 查看 KV namespaces
+# pnpm run wrangler kv:namespace list
+
+# 查看 secrets
+# pnpm run wrangler secret list
+
+# 删除 secret
+# pnpm run wrangler secret delete SECRET_NAME
+
+# 查看部署信息
+# pnpm run wrangler deployments list
+
+# 回滚部署
+# pnpm run wrangler rollback [deployment-id]
