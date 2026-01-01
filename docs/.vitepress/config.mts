@@ -50,10 +50,7 @@ export default defineConfig({
       },
       {
         text: "其他",
-        items: [
-          { text: "贡献指南", link: "/CONTRIBUTING" },
-          { text: "更新日志", link: "/CHANGELOG" },
-        ],
+        items: [{ text: "更新日志", link: "/CHANGELOG" }],
       },
     ],
 
@@ -63,7 +60,7 @@ export default defineConfig({
 
     footer: {
       message: "Released under the MIT License.",
-      copyright: "Copyright © 2025 u14.app Team",
+      copyright: "Copyright © 2026 u14.app Team",
     },
 
     search: {
