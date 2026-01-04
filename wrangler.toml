@@ -2,9 +2,14 @@
 # Imagine Server - Cloudflare Workers Deployment
 
 name = "imagine-server"
-main = "src/index.ts"
+main = "src/worker.ts"
 compatibility_date = "2025-12-18"
 compatibility_flags = ["nodejs_compat"]
+
+# 静态资源配置（使用新的 Assets 功能）
+[assets]
+binding = "ASSETS"
+directory = "./public"
 
 # 账户信息（可选，如果有多个账户）
 # account_id = "your-account-id"

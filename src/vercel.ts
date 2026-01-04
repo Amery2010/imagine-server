@@ -1,5 +1,9 @@
-import { handle } from "hono/vercel";
+/**
+ * Vercel 入口文件
+ * 处理 API 路由（静态文件由 vercel.json 配置处理）
+ */
 import app from "./index";
 
-// 重要：Vercel 需要默认导出 handle 处理后的函数
-export default handle(app);
+// 直接导出 API 应用
+// 静态文件通过 vercel.json 的 routes 配置直接服务
+export default app;

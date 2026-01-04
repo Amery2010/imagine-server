@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { serveStatic } from "@hono/node-server/serve-static";
 import {
   proxyRequest,
   getAvailableModels,
@@ -120,8 +119,5 @@ app.get("/health", (c) => {
 
 // 挂载 API 路由
 app.route("/api", app);
-
-// 静态文件服务 - 服务前端页面
-app.use("/*", serveStatic({ root: "./public" }));
 
 export default app;
