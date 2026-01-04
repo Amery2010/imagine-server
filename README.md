@@ -9,6 +9,7 @@
 ## ✨ 特性
 
 - 🎨 **多模型支持** - 集成 FLUX、Qwen、Z-Image 等多个先进的 AI 模型
+- 🖼️ **Web UI 界面** - 集成 [Peinture](https://github.com/Amery2010/peinture) 提供友好的图形界面
 - 🔌 **插件化架构** - 模块化的 Provider 系统，轻松扩展新的 AI 服务提供商
 - 🔄 **智能 Token 管理** - 自动切换和管理多个 API Token，配额耗尽时自动切换
 - 💾 **统一存储抽象** - 使用 Unstorage 支持 Redis、Cloudflare KV 等多种存储后端
@@ -48,11 +49,7 @@
 
 ## 🚀 快速开始
 
-> 💡 **5 分钟快速开始**: 查看 [QUICKSTART.md](docs/QUICKSTART.md) 快速启动项目
->
-> 📁 **项目结构**: 查看 [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) 了解项目组织方式
->
-> 🔄 **重构说明**: 如果你是老用户，查看 [QUICK_START_AFTER_RESTRUCTURE.md](QUICK_START_AFTER_RESTRUCTURE.md)
+> 💡 **5 分钟快速开始（API）**: 查看 [QUICKSTART.md](docs/QUICKSTART.md) 快速启动 API 服务
 
 ### 前置要求
 
@@ -68,6 +65,9 @@ cd imagine-server
 
 # 安装依赖
 pnpm install
+
+# 构建前端界面
+pnpm run build:frontend
 
 # 或使用快速设置脚本
 chmod +x scripts/setup.sh
@@ -109,6 +109,9 @@ REDIS_URL=redis://localhost:6379
 pnpm run dev
 
 # 服务器将在 http://localhost:3000 启动
+# 访问 Web UI 界面
+open http://localhost:3000
+
 # 访问健康检查端点
 open http://localhost:3000/api/health
 
@@ -261,6 +264,40 @@ docker-compose down
 ```
 
 详细的部署指南请查看 [DEPLOYMENT.md](docs/DEPLOYMENT.md)
+
+## 🖼️ Web UI 界面
+
+本项目集成了 [Peinture](https://github.com/Amery2010/peinture) 作为 Web UI 界面，提供友好的图形化操作体验。
+
+### 访问界面
+
+启动服务器后，访问根路径即可使用 Web UI：
+
+```
+http://localhost:3000
+```
+
+### 构建前端
+
+前端静态文件需要单独构建：
+
+```bash
+# 构建前端（首次使用或更新时）
+pnpm run build:frontend
+```
+
+此命令会自动：
+
+1. 克隆 Peinture 项目
+2. 安装依赖并构建
+3. 将构建产物复制到 `public/` 目录
+
+### 路由说明
+
+- `/` - Web UI 界面（Peinture）
+- `/api/*` - 后端 API 接口
+
+详细说明请查看 [FRONTEND_INTEGRATION.md](docs/FRONTEND_INTEGRATION.md)
 
 ## 📖 API 文档
 

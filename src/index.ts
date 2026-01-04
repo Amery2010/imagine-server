@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { serveStatic } from "@hono/node-server/serve-static";
 import {
   proxyRequest,
   getAvailableModels,
@@ -14,7 +15,7 @@ import {
 import { createAutoStorage } from "./storage";
 import type { Bindings } from "./types";
 
-const app = new Hono<{ Bindings: Bindings }>().basePath("/api");
+const app = new Hono<{ Bindings: Bindings }>();
 
 // 初始化存储（应用启动时）
 let globalStorage: any = null;
@@ -113,8 +114,14 @@ app.get("/health", (c) => {
   return c.json({
     status: "ok",
     timestamp: new Date().toISOString(),
-    version: "1.0.0",
+    version: "1.1.0",
   });
 });
+
+// 挂载 API 路由
+app.route("/api", app);
+
+// 静态文件服务 - 服务前端页面
+app.use("/*", serveStatic({ root: "./public" }));
 
 export default app;

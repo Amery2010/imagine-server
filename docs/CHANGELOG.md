@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-01-04
+
+### Added
+
+- 🖼️ **Web UI 集成**:
+  - 集成 [Peinture](https://github.com/Amery2010/peinture) 作为前端界面
+  - 提供友好的图形化操作体验
+  - 支持文生图、图生图、图生视频等功能
+  - 自动化前端构建脚本 `pnpm run build:frontend`
+  - 构建时注入 `VITE_SERVICE_MODE=server` 环境变量启用服务器模式
+- 📚 **新增文档**:
+  - [前端集成说明](docs/FRONTEND_INTEGRATION.md) - 详细的前端集成指南（包含服务器模式说明）
+  - [Vite 环境变量说明](docs/VITE_ENV_VARIABLES.md) - Vite 环境变量配置指南
+  - [部署检查清单](docs/DEPLOYMENT_CHECKLIST.md) - 部署前的完整检查清单
+- 🔧 **部署优化**:
+  - 更新 GitHub Actions 工作流，自动构建前端并注入环境变量
+  - 更新 Dockerfile，包含前端构建步骤和环境变量
+
+### Changed
+
+- 🔄 **路由结构调整**:
+  - 根路径 `/` 现在返回 Web UI 界面
+  - API 路由保持在 `/api/*` 路径下
+  - 使用 Hono 的静态文件服务提供前端资源
+- 🔧 **前端服务器模式**:
+  - 前端构建时注入 `VITE_SERVICE_MODE=server` 环境变量
+  - 使用 Vite 标准的环境变量机制（`VITE_` 前缀）
+  - 前端自动调用本地 `/api` 接口，无需配置第三方 API
+  - 统一使用后端的 Token 管理和请求代理
+
 ## [1.0.0] - 2026-01-01
 
 ### Added

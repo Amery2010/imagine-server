@@ -28,6 +28,7 @@ export default defineConfig({
           { text: "快速开始", link: "/QUICKSTART" },
           { text: "快速参考", link: "/QUICK_REFERENCE" },
           { text: "部署指南", link: "/DEPLOYMENT" },
+          { text: "前端集成指南", link: "/FRONTEND_INTEGRATION" },
         ],
       },
       {

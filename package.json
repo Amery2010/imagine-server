@@ -1,6 +1,6 @@
 {
   "name": "imagine-server",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Unified AI Image Generation API with multi-provider support (Hugging Face, Gitee AI, ModelScope)",
   "author": "Amery2010",
   "license": "MIT",
@@ -29,6 +29,7 @@
     "dev": "tsx watch server/server.ts",
     "start": "NODE_ENV=production tsx server/server.ts",
     "build": "tsc && fix-esm-import-path dist",
+    "build:frontend": "bash scripts/build-frontend.sh",
     "type-check": "tsc --noEmit",
     "package": "tsx scripts/package.ts",
     "docs:dev": "vitepress dev docs",

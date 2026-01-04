@@ -311,15 +311,11 @@ export class HuggingFaceProvider extends BaseProvider {
     const systemInstruction =
       DEFAULT_SYSTEM_PROMPT_CONTENT + FIXED_SYSTEM_PROMPT_SUFFIX;
 
-    if (modelId !== "openai-fast") {
-      throw new Error("Invalid Model");
-    }
-
     const response = await fetch(POLLINATIONS_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model,
+        model: modelId,
         messages: [
           { role: "system", content: systemInstruction },
           { role: "user", content: prompt },

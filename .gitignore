@@ -43,6 +43,9 @@ dist/
 *.tsbuildinfo
 .cache/
 
+# frontend static files (built from peinture project)
+public/
+
 # vitepress
 docs/.vitepress/dist
 docs/.vitepress/cache

@@ -18,6 +18,9 @@ RUN pnpm install --frozen-lockfile
 # 复制源代码
 COPY . .
 
+# 构建前端（注入服务器模式环境变量）
+RUN VITE_SERVICE_MODE=server pnpm run build:frontend
+
 # 构建 TypeScript
 RUN pnpm run build
 
@@ -39,6 +42,7 @@ RUN pnpm install --prod --frozen-lockfile
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/src ./src
 COPY --from=builder /app/server ./server
+COPY --from=builder /app/public ./public
 
 # 暴露端口
 EXPOSE 3000
