@@ -3,7 +3,7 @@
  * 处理静态文件服务和 API 路由
  */
 import { Hono } from "hono";
-import app from "./index";
+import { app } from "./index";
 import type { Bindings } from "./types";
 
 // 扩展 Bindings 类型以包含静态资源

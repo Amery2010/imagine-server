@@ -30,7 +30,7 @@
     "start": "NODE_ENV=production tsx server/server.ts",
     "start:prod": "NODE_ENV=production node server/server.js",
     "build": "bash scripts/build-frontend.sh && tsc && fix-esm-import-path dist",
-    "build:vercel": "bash scripts/build-frontend.sh && tsc && fix-esm-import-path dist && mkdir -p .vercel/output/static && cp -r public/* .vercel/output/static/",
+    "build:vercel": "bash scripts/build-frontend.sh && tsc && fix-esm-import-path dist",
     "build:frontend": "bash scripts/build-frontend.sh",
     "type-check": "tsc --noEmit",
     "package": "tsx scripts/package.ts",

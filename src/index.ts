@@ -14,7 +14,8 @@ import {
 import { createAutoStorage } from "./storage";
 import type { Bindings } from "./types";
 
-const app = new Hono<{ Bindings: Bindings }>();
+export const app = new Hono<{ Bindings: Bindings }>();
+const webApp = new Hono<{ Bindings: Bindings }>();
 
 // 初始化存储（应用启动时）
 let globalStorage: any = null;
@@ -118,6 +119,9 @@ app.get("/health", (c) => {
 });
 
 // 挂载 API 路由
-app.route("/api", app);
+webApp.route("/api", app);
 
-export default app;
+// 挂载 API 路由
+webApp.get("/", (c) => c.redirect("/index.html"));
+
+export default webApp;
