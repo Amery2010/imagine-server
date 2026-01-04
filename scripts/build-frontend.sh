@@ -29,7 +29,7 @@ echo "📦 安装依赖..."
 npm install
 
 # 修改 vite.config.ts 添加 SERVICE_MODE 定义
-echo "� 配置服务器模式..式."
+echo "⚙️ 配置服务器模式..."
 cat > vite.config.ts << 'VITE_CONFIG'
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';

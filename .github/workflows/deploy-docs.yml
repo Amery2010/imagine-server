@@ -1,10 +1,10 @@
 name: Deploy VitePress site to Pages
 
 on:
-  # 当推送以 v 开头的标签时触发
+  # 当推送到 main 分支时触发
   push:
-    tags:
-      - "v*"
+    branches:
+      - main
 
   # 允许手动触发
   workflow_dispatch:

@@ -28,6 +28,7 @@
   "scripts": {
     "dev": "tsx watch server/server.ts",
     "start": "NODE_ENV=production tsx server/server.ts",
+    "start:prod": "NODE_ENV=production node server/server.js",
     "build": "tsc && fix-esm-import-path dist",
     "build:frontend": "bash scripts/build-frontend.sh",
     "type-check": "tsc --noEmit",
