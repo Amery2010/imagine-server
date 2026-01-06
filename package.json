@@ -1,6 +1,6 @@
 {
   "name": "imagine-server",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Unified AI Image Generation API with multi-provider support (Hugging Face, Gitee AI, ModelScope)",
   "author": "Amery2010",
   "license": "MIT",

@@ -1,127 +1,127 @@
-# Contributing to Imagine Server
+# 为 Imagine Server 贡献代码
 
-Thank you for your interest in contributing to Imagine Server! This document provides guidelines and instructions for contributing.
+感谢你对 Imagine Server 项目的关注！本文档提供了贡献代码的指南和说明。
 
-## Getting Started
+## 开始使用
 
-### Prerequisites
+### 前置要求
 
 - Node.js >= 18.0.0
-- pnpm (recommended) or npm
+- pnpm（推荐）或 npm
 - Git
 
-### Setup Development Environment
+### 设置开发环境
 
-1. Fork and clone the repository:
+1. Fork 并克隆仓库：
 
 ```bash
 git clone https://github.com/Amery2010/imagine-server.git
 cd imagine-server
 ```
 
-2. Install dependencies:
+2. 安装依赖：
 
 ```bash
 pnpm install
 ```
 
-3. Copy environment variables:
+3. 复制环境变量文件：
 
 ```bash
 cp .env.example .env
 ```
 
-4. Configure your `.env` file with your API tokens
+4. 在 `.env` 文件中配置你的 API tokens
 
-5. Start development server:
+5. 启动开发服务器：
 
 ```bash
 pnpm run dev
 ```
 
-## Development Workflow
+## 开发流程
 
-### Code Style
+### 代码风格
 
-- We use TypeScript for type safety
-- Follow the existing code style
-- Use 2 spaces for indentation
-- Add comments for complex logic
-- Keep functions small and focused
+- 使用 TypeScript 确保类型安全
+- 遵循现有的代码风格
+- 使用 2 个空格进行缩进
+- 为复杂逻辑添加注释
+- 保持函数简洁且专注
 
-### Type Checking
+### 类型检查
 
-Before committing, ensure your code passes type checking:
+在提交代码前，确保你的代码通过类型检查：
 
 ```bash
 pnpm run type-check
 ```
 
-### Testing
+### 测试
 
-Test your changes locally:
+在本地测试你的更改：
 
 ```bash
-# For Vercel
+# Vercel 环境
 pnpm run vercel:dev
 
-# For Cloudflare Workers
+# Cloudflare Workers 环境
 pnpm run wrangler:dev
 ```
 
-## Making Changes
+## 进行更改
 
-### Branch Naming
+### 分支命名
 
-- `feature/` - New features
-- `fix/` - Bug fixes
-- `docs/` - Documentation updates
-- `refactor/` - Code refactoring
-- `chore/` - Maintenance tasks
+- `feature/` - 新功能
+- `fix/` - Bug 修复
+- `docs/` - 文档更新
+- `refactor/` - 代码重构
+- `chore/` - 维护任务
 
-Example: `feature/add-new-model-support`
+示例：`feature/add-new-model-support`
 
-### Commit Messages
+### 提交信息
 
-Follow conventional commits format:
+遵循约定式提交格式：
 
-- `feat:` - New feature
-- `fix:` - Bug fix
-- `docs:` - Documentation changes
-- `style:` - Code style changes (formatting, etc.)
-- `refactor:` - Code refactoring
-- `test:` - Adding or updating tests
-- `chore:` - Maintenance tasks
+- `feat:` - 新功能
+- `fix:` - Bug 修复
+- `docs:` - 文档变更
+- `style:` - 代码样式变更（格式化等）
+- `refactor:` - 代码重构
+- `test:` - 添加或更新测试
+- `chore:` - 维护任务
 
-Example: `feat: add support for DALL-E 3 model`
+示例：`feat: add support for DALL-E 3 model`
 
-### Pull Request Process
+### Pull Request 流程
 
-1. Create a new branch from `main`
-2. Make your changes
-3. Test thoroughly
-4. Update documentation if needed
-5. Commit your changes with clear messages
-6. Push to your fork
-7. Create a Pull Request
+1. 从 `main` 分支创建新分支
+2. 进行你的更改
+3. 充分测试
+4. 如有需要，更新文档
+5. 使用清晰的信息提交你的更改
+6. 推送到你的 fork
+7. 创建 Pull Request
 
-#### Pull Request Guidelines
+#### Pull Request 指南
 
-- Provide a clear description of the changes
-- Reference any related issues
-- Include screenshots for UI changes
-- Ensure all checks pass
-- Request review from maintainers
+- 提供清晰的更改描述
+- 引用相关的 issue
+- 对于 UI 更改，包含截图
+- 确保所有检查通过
+- 请求维护者审查
 
-## Adding New Features
+## 添加新功能
 
-### Adding a New AI Provider
+### 添加新的 AI Provider
 
 本项目采用插件化架构，添加新的 Provider 非常简单！
 
-**详细指南**: 请查看 [Provider 插件开发指南](./docs/PROVIDER_PLUGIN_GUIDE.md)
+**详细指南**：请查看 [Provider 插件开发指南](./docs/PROVIDER_PLUGIN_GUIDE.md)
 
-**快速步骤**:
+**快速步骤**：
 
 1. 在 `src/providers/` 创建新的 Provider 文件（如 `myprovider.ts`）
 2. 继承 `BaseProvider` 类并实现必需的方法
@@ -130,7 +130,7 @@ Example: `feat: add support for DALL-E 3 model`
 5. 测试你的实现
 6. 更新文档
 
-**示例代码**:
+**示例代码**：
 
 ```typescript
 import { BaseProvider, type ModelConfig } from "./base";
@@ -158,7 +158,7 @@ export class MyProvider extends BaseProvider {
 }
 ```
 
-然后在 `src/providers/registry.ts` 中注册:
+然后在 `src/providers/registry.ts` 中注册：
 
 ```typescript
 providerRegistry.register(new MyProvider());
@@ -166,7 +166,7 @@ providerRegistry.register(new MyProvider());
 
 完成！你的 Provider 现在可以通过 `myprovider/my-model` 访问了。
 
-### Adding a New Model
+### 添加新模型
 
 如果你只是想为现有的 Provider 添加新模型：
 
@@ -176,7 +176,7 @@ providerRegistry.register(new MyProvider());
 4. 更新 README.md 中的模型列表
 5. 充分测试新模型
 
-**示例**:
+**示例**：
 
 ```typescript
 getModelConfigs() {
@@ -195,52 +195,52 @@ getModelConfigs() {
 }
 ```
 
-## Code Review
+## 代码审查
 
-All submissions require review. We use GitHub pull requests for this purpose.
+所有提交都需要经过审查。我们使用 GitHub pull requests 进行此流程。
 
-### Review Criteria
+### 审查标准
 
-- Code quality and style
-- Type safety
-- Error handling
-- Documentation
-- Performance considerations
-- Security implications
+- 代码质量和风格
+- 类型安全
+- 错误处理
+- 文档完整性
+- 性能考虑
+- 安全性影响
 
-## Reporting Issues
+## 报告问题
 
-### Bug Reports
+### Bug 报告
 
-Include:
+请包含：
 
-- Clear description of the issue
-- Steps to reproduce
-- Expected vs actual behavior
-- Environment details (OS, Node version, etc.)
-- Error messages and logs
+- 问题的清晰描述
+- 重现步骤
+- 预期行为与实际行为
+- 环境详情（操作系统、Node 版本等）
+- 错误信息和日志
 
-### Feature Requests
+### 功能请求
 
-Include:
+请包含：
 
-- Clear description of the feature
-- Use case and benefits
-- Possible implementation approach
-- Any relevant examples
+- 功能的清晰描述
+- 使用场景和好处
+- 可能的实现方法
+- 任何相关示例
 
-## Questions?
+## 有疑问？
 
-Feel free to:
+欢迎：
 
-- Open an issue for discussion
-- Ask in pull request comments
-- Contact maintainers
+- 开启 issue 进行讨论
+- 在 pull request 评论中提问
+- 联系维护者
 
-## License
+## 许可证
 
-By contributing, you agree that your contributions will be licensed under the MIT License.
+通过贡献代码，你同意你的贡献将采用 MIT 许可证。
 
-## Thank You!
+## 感谢！
 
-Your contributions help make this project better for everyone. We appreciate your time and effort! 🎉
+你的贡献让这个项目变得更好。我们感谢你的时间和努力！🎉
