@@ -4,6 +4,7 @@ import { GiteeProvider } from "./gitee";
 import { HuggingFaceProvider } from "./huggingface";
 import { ModelScopeProvider } from "./modelscope";
 import { A4FProvider } from "./a4f";
+import { ModelsLabProvider } from "./modelslab";
 import { hasAvailableToken } from "../api/token-manager";
 
 /**
@@ -106,6 +107,7 @@ providerRegistry.register(new GiteeProvider());
 providerRegistry.register(new HuggingFaceProvider());
 providerRegistry.register(new ModelScopeProvider());
 providerRegistry.register(new A4FProvider());
+providerRegistry.register(new ModelsLabProvider());
 
 /**
  * 获取所有可用模型列表（不过滤）
