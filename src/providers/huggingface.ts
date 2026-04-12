@@ -1,6 +1,6 @@
 import type { Context } from "hono";
 import { BaseProvider, type ModelConfig } from "./base";
-import { runWithTokenRetry, markTokenExhausted } from "../api/token-manager";
+import { runWithTokenRetry, markTokenExhausted, encryptTokenForStorage } from "../api/token-manager";
 import {
   getDimensions,
   extractCompleteEventData,
@@ -10,6 +10,7 @@ import {
   FIXED_SYSTEM_PROMPT_SUFFIX,
   VIDEO_NEGATIVE_PROMPT,
 } from "./utils";
+import { fetchWithTimeout, TIMEOUT } from "../utils/fetch-with-timeout";
 
 // API URLs
 const ZIMAGE_TURBO_BASE_API_URL = "https://luca115-z-image-turbo.hf.space";
@@ -219,16 +220,17 @@ export class HuggingFaceProvider extends BaseProvider {
       };
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
-      const queue = await fetch(`${apiBaseUrl}/gradio_api/call/${endpoint}`, {
+      const queue = await fetchWithTimeout(`${apiBaseUrl}/gradio_api/call/${endpoint}`, {
+        timeout: TIMEOUT.SHORT,
         method: "POST",
         headers,
         body: JSON.stringify({ data }),
       });
 
       const queueResult: any = await queue.json();
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `${apiBaseUrl}/gradio_api/call/${endpoint}/${queueResult.event_id}`,
-        { headers },
+        { timeout: TIMEOUT.LONG, ...({ headers }) },
       );
       const result = await response.text();
       const eventData = extractCompleteEventData(result);
@@ -290,9 +292,10 @@ export class HuggingFaceProvider extends BaseProvider {
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
       if (modelId === "qwen-image-edit") {
-        const queue = await fetch(
+        const queue = await fetchWithTimeout(
           QWEN_IMAGE_EDIT_BASE_API_URL + "/gradio_api/call/infer",
           {
+            timeout: TIMEOUT.SHORT,
             method: "POST",
             headers,
             body: JSON.stringify({
@@ -312,11 +315,11 @@ export class HuggingFaceProvider extends BaseProvider {
         );
 
         const queueResult: any = await queue.json();
-        const response = await fetch(
+        const response = await fetchWithTimeout(
           QWEN_IMAGE_EDIT_BASE_API_URL +
             "/gradio_api/call/infer/" +
             queueResult.event_id,
-          { headers },
+          { timeout: TIMEOUT.LONG, ...({ headers }) },
         );
         const result = await response.text();
         const eventData = extractCompleteEventData(result);
@@ -343,7 +346,8 @@ export class HuggingFaceProvider extends BaseProvider {
     const systemInstruction =
       DEFAULT_SYSTEM_PROMPT_CONTENT + FIXED_SYSTEM_PROMPT_SUFFIX;
 
-    const response = await fetch(POLLINATIONS_API_URL, {
+    const response = await fetchWithTimeout(POLLINATIONS_API_URL, {
+      timeout: TIMEOUT.LONG,
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -386,9 +390,10 @@ export class HuggingFaceProvider extends BaseProvider {
         if (token) headers["Authorization"] = `Bearer ${token}`;
 
         if (modelId === "wan2.2-i2v") {
-          const queue = await fetch(
+          const queue = await fetchWithTimeout(
             WAN2_VIDEO_API_URL + "/gradio_api/call/generate_video",
             {
+              timeout: TIMEOUT.SHORT,
               method: "POST",
               headers,
               body: JSON.stringify({
@@ -412,13 +417,14 @@ export class HuggingFaceProvider extends BaseProvider {
 
           const { event_id: taskId }: any = await queue.json();
 
+          const encryptedToken = await encryptTokenForStorage(token!, env);
           await env.VIDEO_TASK_KV.put(
             taskId,
             JSON.stringify({
               status: "processing",
               id: taskId,
               provider: "huggingface",
-              token,
+              token: encryptedToken,
               createdAt: new Date().toISOString(),
             }),
             { expirationTtl: 86400 },
@@ -444,9 +450,9 @@ export class HuggingFaceProvider extends BaseProvider {
     if (token) headers["Authorization"] = `Bearer ${token}`;
 
     try {
-      const videoResponse = await fetch(
+      const videoResponse = await fetchWithTimeout(
         WAN2_VIDEO_API_URL + "/gradio_api/call/generate_video/" + taskId,
-        { headers },
+        { timeout: TIMEOUT.LONG, ...({ headers }) },
       );
       const text = await videoResponse.text();
       const eventData = extractCompleteEventData(text);
@@ -455,36 +461,55 @@ export class HuggingFaceProvider extends BaseProvider {
         const vid = eventData[0];
         const videoUrl = vid?.url;
 
-        await env.VIDEO_TASK_KV.put(
-          taskId,
-          JSON.stringify({
-            status: "success",
-            url: videoUrl,
-            id: taskId,
-            provider: "huggingface",
-            completedAt: new Date().toISOString(),
-          }),
-        );
+        try {
+          await env.VIDEO_TASK_KV.put(
+            taskId,
+            JSON.stringify({
+              status: "success",
+              url: videoUrl,
+              id: taskId,
+              provider: "huggingface",
+              completedAt: new Date().toISOString(),
+            }),
+          );
+        } catch (kvError) {
+          console.warn("[HuggingFace] KV write failed:", kvError);
+        }
 
         return { status: "success", url: videoUrl };
       }
-    } catch {
-      await env.VIDEO_TASK_KV.put(
-        taskId,
-        JSON.stringify({
-          status: "failed",
-          id: taskId,
-          provider: "huggingface",
-          error: "Video generation failed",
-          failedAt: new Date().toISOString(),
-        }),
-      );
 
-      await markTokenExhausted("huggingface", token, env);
+      // SSE 尚未返回 complete 事件，任务仍在处理中
+      return { status: "processing" };
+    } catch (error: any) {
+      // 区分配额错误和暂时性网络错误
+      const isQuotaError =
+        error.message?.includes("429") ||
+        error.message?.includes("quota") ||
+        error.message?.includes("exhausted");
+
+      if (isQuotaError) {
+        await markTokenExhausted("huggingface", token, env);
+      }
+
+      try {
+        await env.VIDEO_TASK_KV.put(
+          taskId,
+          JSON.stringify({
+            status: "failed",
+            id: taskId,
+            provider: "huggingface",
+            error: error.message || "Video generation failed",
+            failedAt: new Date().toISOString(),
+          }),
+        );
+      } catch (kvError) {
+        console.warn("[HuggingFace] KV write failed:", kvError);
+      }
 
       return {
         status: "failed",
-        error: "Video generation failed",
+        error: error.message || "Video generation failed",
       };
     }
   }
@@ -502,7 +527,7 @@ export class HuggingFaceProvider extends BaseProvider {
       };
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
-      const imageResponse = await fetch(imageUrl);
+      const imageResponse = await fetchWithTimeout(imageUrl, { timeout: TIMEOUT.DEFAULT });
       const imageBlob = await imageResponse.blob();
       const pathOrUrl = await processFileUpload(
         imageBlob,
@@ -512,9 +537,10 @@ export class HuggingFaceProvider extends BaseProvider {
         (p) => `${QWEN_IMAGE_EDIT_BASE_API_URL}/gradio_api/file=${p}`
       );
 
-      const queue = await fetch(
+      const queue = await fetchWithTimeout(
         UPSCALER_BASE_API_URL + "/gradio_api/call/realesrgan",
         {
+          timeout: TIMEOUT.SHORT,
           method: "POST",
           headers,
           body: JSON.stringify({
@@ -533,11 +559,11 @@ export class HuggingFaceProvider extends BaseProvider {
       );
 
       const queueResult: any = await queue.json();
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         UPSCALER_BASE_API_URL +
           "/gradio_api/call/realesrgan/" +
           queueResult.event_id,
-        { headers },
+        { timeout: TIMEOUT.LONG, ...({ headers }) },
       );
       const result = await response.text();
       const eventData = extractCompleteEventData(result);

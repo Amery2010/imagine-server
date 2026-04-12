@@ -1,6 +1,12 @@
 import type { Context } from "hono";
 import type { Storage } from "unstorage";
 import type { Bindings } from "../types";
+import {
+  encryptToken,
+  decryptToken,
+  getEncryptionKey,
+} from "../services/crypto";
+import { withCircuitBreaker } from "../utils/circuit-breaker";
 
 export type Provider =
   | "huggingface"
@@ -11,6 +17,18 @@ export type Provider =
   | "grok"
   | "openai"
   | "modelslab";
+
+// 运行时校验用的有效 Provider 列表
+const VALID_PROVIDERS: readonly string[] = [
+  "huggingface",
+  "gitee",
+  "modelscope",
+  "a4f",
+  "gemini",
+  "grok",
+  "openai",
+  "modelslab",
+] as const;
 
 // Token 状态存储结构
 interface TokenStatusStore {
@@ -271,12 +289,26 @@ export async function runWithTokenRetry<T>(
     }
 
     try {
-      return await operation(token);
+      return await withCircuitBreaker(
+        env.storage,
+        provider,
+        async () => {
+          return await operation(token);
+        },
+        // 对大模型服务，设置 5 次连续非客户端错误失败为熔断阈值，60秒后半开尝试
+        { failureThreshold: 5, resetTimeout: 60_000 }
+      );
     } catch (error: any) {
       lastError = error;
 
       // 如果是用户中止请求，直接抛出
       if (error.name === "AbortError") {
+        throw error;
+      }
+
+      // 如果是熔断器触发，直接抛出，无需重试其他 token，因为是整个 provider 不可用
+      if (error.message?.includes("Circuit breaker is OPEN")) {
+        console.warn(`[TokenManager] Fast-failing due to circuit breaker trip for ${provider}`);
         throw error;
       }
 
@@ -404,10 +436,61 @@ export async function resetTokenStatusHandler(c: Context) {
     return c.json({ error: "Provider is required" }, 400);
   }
 
+  if (!VALID_PROVIDERS.includes(provider)) {
+    return c.json(
+      {
+        error: "Invalid provider",
+        message: `Valid providers: ${VALID_PROVIDERS.join(", ")}`,
+      },
+      400,
+    );
+  }
+
   await resetTokenStatus(provider as Provider, c.env);
 
   return c.json({
     success: true,
     message: `Token status reset for ${provider}`,
   });
+}
+
+/**
+ * 加密 Token 用于 KV 存储
+ *
+ * 如果配置了加密密钥，使用 AES-GCM 加密；否则原样返回。
+ */
+export async function encryptTokenForStorage(
+  token: string,
+  env: Bindings,
+): Promise<string> {
+  const key = getEncryptionKey(env);
+  if (!key) return token;
+
+  try {
+    return await encryptToken(token, key);
+  } catch (e) {
+    console.warn("[TokenManager] Encryption failed, storing as-is:", e);
+    return token;
+  }
+}
+
+/**
+ * 从 KV 中解密 Token
+ *
+ * 如果配置了加密密钥，尝试 AES-GCM 解密；解密失败时回退到原始值
+ * （兼容加密前已存储的旧数据）。
+ */
+export async function decryptTokenFromStorage(
+  encryptedToken: string,
+  env: Bindings,
+): Promise<string> {
+  const key = getEncryptionKey(env);
+  if (!key) return encryptedToken;
+
+  try {
+    return await decryptToken(encryptedToken, key);
+  } catch {
+    // 可能是未加密的旧数据，直接返回
+    return encryptedToken;
+  }
 }

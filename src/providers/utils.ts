@@ -3,6 +3,7 @@
  */
 import { S3Service } from "../services/s3";
 import type { Bindings } from "../types";
+import { fetchWithTimeout, TIMEOUT } from "../utils/fetch-with-timeout";
 
 // System prompt for optimization
 export const FIXED_SYSTEM_PROMPT_SUFFIX =
@@ -118,7 +119,8 @@ export async function uploadToGradio(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${baseUrl}/gradio_api/upload`, {
+  const response = await fetchWithTimeout(`${baseUrl}/gradio_api/upload`, {
+    timeout: TIMEOUT.SHORT,
     method: "POST",
     headers,
     body: formData,
@@ -200,7 +202,19 @@ export async function processGeneratedResult(result: any, env: Bindings): Promis
         }
       } else if (url.startsWith("http")) {
         // HTTP URL (Download from third-party)
-        const fetchRes = await fetch(url);
+        // 先用 HEAD 请求检查文件大小，防止在 Serverless 环境中下载超大文件导致 OOM
+        const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
+        try {
+          const headRes = await fetchWithTimeout(url, { method: "HEAD", timeout: TIMEOUT.QUICK });
+          const contentLength = headRes.headers.get("content-length");
+          if (contentLength && parseInt(contentLength, 10) > MAX_FILE_SIZE) {
+            console.warn(`[S3] File too large (${contentLength} bytes), skipping S3 upload`);
+            return url;
+          }
+        } catch {
+          // HEAD 请求失败时继续尝试下载
+        }
+        const fetchRes = await fetchWithTimeout(url, { timeout: TIMEOUT.DEFAULT });
         if (!fetchRes.ok) throw new Error(`Failed to download from temp url: ${fetchRes.status}`);
         buffer = await fetchRes.arrayBuffer();
         contentType = fetchRes.headers.get("content-type") || "image/png";

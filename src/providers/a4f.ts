@@ -2,6 +2,7 @@ import type { Context } from "hono";
 import { BaseProvider, type ModelConfig } from "./base";
 import { runWithTokenRetry } from "../api/token-manager";
 import { getBaseDimensions } from "./utils";
+import { fetchWithTimeout, TIMEOUT } from "../utils/fetch-with-timeout";
 
 const A4F_BASE_URL = "https://api.a4f.co/v1";
 
@@ -138,7 +139,8 @@ export class A4FProvider extends BaseProvider {
       const { width, height } = getBaseDimensions(ar);
       const size = `${width}x${height}`;
 
-      const response = await fetch(`${A4F_BASE_URL}/images/generations`, {
+      const response = await fetchWithTimeout(`${A4F_BASE_URL}/images/generations`, {
+        timeout: TIMEOUT.LONG,
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -188,7 +190,8 @@ export class A4FProvider extends BaseProvider {
       } = params;
       const modelId = this.getApiModelId(model);
 
-      const response = await fetch(`${A4F_BASE_URL}/chat/completions`, {
+      const response = await fetchWithTimeout(`${A4F_BASE_URL}/chat/completions`, {
+        timeout: TIMEOUT.SHORT,
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

@@ -1,6 +1,6 @@
 {
   "name": "imagine-server",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Unified AI Image Generation API with multi-provider support (Hugging Face, Gitee AI, ModelScope)",
   "author": "Amery2010",
   "license": "MIT",
@@ -36,6 +36,7 @@
     "lint": "eslint \"src/**/*.ts\"",
     "format": "prettier --write \"src/**/*.ts\"",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "package": "tsx scripts/package.ts",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
@@ -67,6 +68,7 @@
     "@eslint/js": "^10.0.1",
     "@lando/vitepress-theme-default-plus": "^1.1.1",
     "@types/node": "^20.11.17",
+    "@vitest/coverage-v8": "^2.1.9",
     "eslint": "^10.2.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",

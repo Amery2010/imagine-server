@@ -1,12 +1,13 @@
 import type { Context } from "hono";
 import { BaseProvider, type ModelConfig } from "./base";
-import { runWithTokenRetry } from "../api/token-manager";
+import { runWithTokenRetry, encryptTokenForStorage } from "../api/token-manager";
 import {
   getDimensions,
   DEFAULT_SYSTEM_PROMPT_CONTENT,
   FIXED_SYSTEM_PROMPT_SUFFIX,
   VIDEO_NEGATIVE_PROMPT,
 } from "./utils";
+import { fetchWithTimeout, TIMEOUT } from "../utils/fetch-with-timeout";
 
 // API URLs
 const GITEE_GENERATE_API_URL = "https://ai.gitee.com/v1/images/generations";
@@ -172,7 +173,8 @@ export class GiteeProvider extends BaseProvider {
         requestBody.guidance_scale = guidance;
       }
 
-      const response = await fetch(GITEE_GENERATE_API_URL, {
+      const response = await fetchWithTimeout(GITEE_GENERATE_API_URL, {
+        timeout: TIMEOUT.LONG,
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -240,7 +242,8 @@ export class GiteeProvider extends BaseProvider {
         formData.append("image", blob);
       });
 
-      const response = await fetch(GITEE_EDIT_API_URL, {
+      const response = await fetchWithTimeout(GITEE_EDIT_API_URL, {
+        timeout: TIMEOUT.LONG,
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -277,7 +280,8 @@ export class GiteeProvider extends BaseProvider {
       const systemInstruction =
         DEFAULT_SYSTEM_PROMPT_CONTENT + FIXED_SYSTEM_PROMPT_SUFFIX;
 
-      const response = await fetch(GITEE_CHAT_API_URL, {
+      const response = await fetchWithTimeout(GITEE_CHAT_API_URL, {
+        timeout: TIMEOUT.SHORT,
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -330,7 +334,8 @@ export class GiteeProvider extends BaseProvider {
       formData.append("height", height.toString());
       formData.append("width", width.toString());
 
-      const response = await fetch(GITEE_VIDEO_TASK_API_URL, {
+      const response = await fetchWithTimeout(GITEE_VIDEO_TASK_API_URL, {
+        timeout: TIMEOUT.SHORT,
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -348,13 +353,14 @@ export class GiteeProvider extends BaseProvider {
 
       const taskId = data.task_id;
 
+      const encryptedToken = await encryptTokenForStorage(token!, env);
       await env.VIDEO_TASK_KV.put(
         taskId,
         JSON.stringify({
           status: "processing",
           id: taskId,
           provider: "gitee",
-          token,
+          token: encryptedToken,
           createdAt: new Date().toISOString(),
         }),
         { expirationTtl: 86400 },
@@ -368,7 +374,8 @@ export class GiteeProvider extends BaseProvider {
     const { taskId, token } = params;
 
     try {
-      const response = await fetch(`${GITEE_TASK_STATUS_API_URL}/${taskId}`, {
+      const response = await fetchWithTimeout(`${GITEE_TASK_STATUS_API_URL}/${taskId}`, {
+        timeout: TIMEOUT.QUICK,
         headers: {
           Authorization: `Bearer ${token}`,
         },

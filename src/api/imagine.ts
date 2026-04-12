@@ -6,6 +6,8 @@ import {
   getAvailableModelsFiltered,
 } from "../providers";
 import { processGeneratedResult } from "../providers/utils";
+import { decryptTokenFromStorage } from "./token-manager";
+import { pollAndFireWebhook } from "../utils/webhook-poller";
 
 /**
  * 获取所有可用模型列表
@@ -143,6 +145,14 @@ export async function proxyRequest(c: Context) {
       return result;
     }
 
+    // 后台提交 Webhook 轮询（如果支持）
+    const webhookUrl = params.webhookUrl;
+    if (webhookUrl && result.taskId && typeof c.executionCtx?.waitUntil === "function") {
+      c.executionCtx.waitUntil(
+        pollAndFireWebhook(providerName, result.taskId, webhookUrl, c.env)
+      );
+    }
+
     // 拦截结果并走统一存储逻辑
     const finalResult = await processGeneratedResult(result, c.env);
 
@@ -200,9 +210,15 @@ export async function getTaskStatus(c: Context) {
           );
         }
 
+        // 解密 KV 中加密存储的 token
+        const decryptedToken = await decryptTokenFromStorage(
+          taskData.token,
+          c.env,
+        );
+
         const result = await provider.handleRequest(c, "task-status", {
           taskId,
-          token: taskData.token,
+          token: decryptedToken,
         });
 
         const finalResult = await processGeneratedResult(result, c.env);

@@ -2,6 +2,7 @@ import type { Context } from "hono";
 import { BaseProvider, type ModelConfig } from "./base";
 import { runWithTokenRetry } from "../api/token-manager";
 import { getDimensions } from "./utils";
+import { fetchWithTimeout, TIMEOUT } from "../utils/fetch-with-timeout";
 
 const MODELSLAB_API_URL = "https://modelslab.com/api/v6";
 
@@ -123,7 +124,8 @@ export class ModelsLabProvider extends BaseProvider {
         body.negative_prompt = negativePrompt;
       }
 
-      const response = await fetch(`${MODELSLAB_API_URL}/images/text2img`, {
+      const response = await fetchWithTimeout(`${MODELSLAB_API_URL}/images/text2img`, {
+        timeout: TIMEOUT.LONG,
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -174,7 +176,8 @@ export class ModelsLabProvider extends BaseProvider {
         num_inference_steps: String(steps),
       };
 
-      const response = await fetch(`${MODELSLAB_API_URL}/video/text2video`, {
+      const response = await fetchWithTimeout(`${MODELSLAB_API_URL}/video/text2video`, {
+        timeout: TIMEOUT.LONG,
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),

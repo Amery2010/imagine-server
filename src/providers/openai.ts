@@ -1,10 +1,11 @@
 import type { Context } from "hono";
 import { BaseProvider, type ModelConfig } from "./base";
-import { runWithTokenRetry } from "../api/token-manager";
+import { runWithTokenRetry, encryptTokenForStorage } from "../api/token-manager";
 import {
   DEFAULT_SYSTEM_PROMPT_CONTENT,
   FIXED_SYSTEM_PROMPT_SUFFIX,
 } from "./utils";
+import { fetchWithTimeout, TIMEOUT } from "../utils/fetch-with-timeout";
 
 const DEFAULT_OPENAI_API_BASE = "https://api.openai.com/v1";
 
@@ -135,9 +136,10 @@ export class OpenAIProvider extends BaseProvider {
       const { model, prompt } = params;
       const modelId = this.getApiModelId(model);
 
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `${env.OPENAI_API_BASE || DEFAULT_OPENAI_API_BASE}/images/generations`,
         {
+          timeout: TIMEOUT.LONG,
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -202,9 +204,10 @@ export class OpenAIProvider extends BaseProvider {
         formData.append("image[]", file);
       }
 
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `${env.OPENAI_API_BASE || DEFAULT_OPENAI_API_BASE}/images/edits`,
         {
+          timeout: TIMEOUT.LONG,
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -253,9 +256,10 @@ export class OpenAIProvider extends BaseProvider {
       const systemInstruction =
         DEFAULT_SYSTEM_PROMPT_CONTENT + FIXED_SYSTEM_PROMPT_SUFFIX;
 
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `${env.OPENAI_API_BASE || DEFAULT_OPENAI_API_BASE}/responses`,
         {
+          timeout: TIMEOUT.SHORT,
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -417,7 +421,7 @@ export class OpenAIProvider extends BaseProvider {
 
       if (imageUrl) {
         // image2video 模式：下载图片并作为 input_reference 追加
-        const imageResponse = await fetch(imageUrl);
+        const imageResponse = await fetchWithTimeout(imageUrl, { timeout: TIMEOUT.DEFAULT });
         if (!imageResponse.ok) {
           throw new Error(`Failed to download image: ${imageResponse.status}`);
         }
@@ -432,9 +436,10 @@ export class OpenAIProvider extends BaseProvider {
         );
       }
 
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `${env.OPENAI_API_BASE || DEFAULT_OPENAI_API_BASE}/videos`,
         {
+          timeout: TIMEOUT.SHORT,
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -460,13 +465,14 @@ export class OpenAIProvider extends BaseProvider {
 
       // video id 作为 taskId 存入 KV
       const taskId = videoId;
+      const encryptedToken = await encryptTokenForStorage(token!, env);
       await env.VIDEO_TASK_KV.put(
         taskId,
         JSON.stringify({
           status: "processing",
           id: taskId,
           provider: "openai",
-          token,
+          token: encryptedToken,
           videoId,
           createdAt: new Date().toISOString(),
         }),
@@ -487,9 +493,10 @@ export class OpenAIProvider extends BaseProvider {
     const { taskId, token } = params;
 
     try {
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `${env.OPENAI_API_BASE || DEFAULT_OPENAI_API_BASE}/videos/${taskId}`,
         {
+          timeout: TIMEOUT.QUICK,
           headers: { Authorization: `Bearer ${token}` },
         },
       );
@@ -502,9 +509,10 @@ export class OpenAIProvider extends BaseProvider {
 
       if (data.status === "completed") {
         // 下载视频内容
-        const videoResponse = await fetch(
+        const videoResponse = await fetchWithTimeout(
           `${env.OPENAI_API_BASE || DEFAULT_OPENAI_API_BASE}/videos/${taskId}/content`,
           {
+            timeout: TIMEOUT.DEFAULT,
             headers: { Authorization: `Bearer ${token}` },
             redirect: "follow",
           },

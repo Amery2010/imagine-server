@@ -1,12 +1,13 @@
 import type { Context } from "hono";
 import { BaseProvider, type ModelConfig } from "./base";
-import { runWithTokenRetry } from "../api/token-manager";
+import { runWithTokenRetry, encryptTokenForStorage } from "../api/token-manager";
 import {
   uploadToGradio,
   processFileUpload,
   DEFAULT_SYSTEM_PROMPT_CONTENT,
   FIXED_SYSTEM_PROMPT_SUFFIX,
 } from "./utils";
+import { fetchWithTimeout, TIMEOUT } from "../utils/fetch-with-timeout";
 
 const DEFAULT_GROK_API_BASE = "https://api.x.ai/v1";
 
@@ -138,9 +139,10 @@ export class GrokProvider extends BaseProvider {
       const { model, prompt } = params;
       const modelId = this.getApiModelId(model);
 
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `${env.GROK_API_BASE || DEFAULT_GROK_API_BASE}/images/generations`,
         {
+          timeout: TIMEOUT.LONG,
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -202,9 +204,10 @@ export class GrokProvider extends BaseProvider {
         (path) => `${GRADIO_UPLOAD_BASE_URL}/gradio_api/file=${path}`
       );
 
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `${env.GROK_API_BASE || DEFAULT_GROK_API_BASE}/images/edits`,
         {
+          timeout: TIMEOUT.LONG,
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -256,9 +259,10 @@ export class GrokProvider extends BaseProvider {
       const systemInstruction =
         DEFAULT_SYSTEM_PROMPT_CONTENT + FIXED_SYSTEM_PROMPT_SUFFIX;
 
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `${env.GROK_API_BASE || DEFAULT_GROK_API_BASE}/chat/completions`,
         {
+          timeout: TIMEOUT.LONG,
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -323,9 +327,10 @@ export class GrokProvider extends BaseProvider {
         requestBody.image = { url: imageUrl };
       }
 
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `${env.GROK_API_BASE || DEFAULT_GROK_API_BASE}/videos/generations`,
         {
+          timeout: TIMEOUT.LONG,
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -351,13 +356,14 @@ export class GrokProvider extends BaseProvider {
 
       // request_id 作为 taskId 存入 KV
       const taskId = requestId;
+      const encryptedToken = await encryptTokenForStorage(token!, env);
       await env.VIDEO_TASK_KV.put(
         taskId,
         JSON.stringify({
           status: "processing",
           id: taskId,
           provider: "grok",
-          token,
+          token: encryptedToken,
           requestId,
           createdAt: new Date().toISOString(),
         }),
@@ -378,9 +384,10 @@ export class GrokProvider extends BaseProvider {
     const { taskId, token } = params;
 
     try {
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `${env.GROK_API_BASE || DEFAULT_GROK_API_BASE}/videos/${taskId}`,
         {
+          timeout: TIMEOUT.QUICK,
           headers: { Authorization: `Bearer ${token}` },
         },
       );

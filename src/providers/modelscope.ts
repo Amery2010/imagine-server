@@ -7,6 +7,7 @@ import {
   DEFAULT_SYSTEM_PROMPT_CONTENT,
   FIXED_SYSTEM_PROMPT_SUFFIX,
 } from "./utils";
+import { fetchWithTimeout, TIMEOUT } from "../utils/fetch-with-timeout";
 
 // API URLs
 const MS_GENERATE_API_URL =
@@ -139,7 +140,8 @@ export class ModelScopeProvider extends BaseProvider {
       }
 
       // 步骤 1: 发送异步请求，获取 task_id
-      const response = await fetch(MS_GENERATE_API_URL, {
+      const response = await fetchWithTimeout(MS_GENERATE_API_URL, {
+        timeout: TIMEOUT.LONG,
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -206,7 +208,7 @@ export class ModelScopeProvider extends BaseProvider {
             env,
             QWEN_IMAGE_EDIT_BASE_API_URL,
             token,
-            (p) => `${QWEN_IMAGE_EDIT_BASE_API_URL}/gradio_api/file=${p}`
+            (p) => `${QWEN_IMAGE_EDIT_BASE_API_URL}/gradio_api/file=${p}`,
           );
           return pathOrUrl;
         }
@@ -224,7 +226,8 @@ export class ModelScopeProvider extends BaseProvider {
       };
 
       // 步骤 1: 发送异步请求，获取 task_id
-      const response = await fetch(MS_GENERATE_API_URL, {
+      const response = await fetchWithTimeout(MS_GENERATE_API_URL, {
+        timeout: TIMEOUT.LONG,
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -267,7 +270,8 @@ export class ModelScopeProvider extends BaseProvider {
       const systemInstruction =
         DEFAULT_SYSTEM_PROMPT_CONTENT + FIXED_SYSTEM_PROMPT_SUFFIX;
 
-      const response = await fetch(MS_CHAT_API_URL, {
+      const response = await fetchWithTimeout(MS_CHAT_API_URL, {
+        timeout: TIMEOUT.SHORT,
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -309,7 +313,8 @@ export class ModelScopeProvider extends BaseProvider {
       await new Promise((resolve) => setTimeout(resolve, pollInterval));
 
       const taskUrl = `${MS_TASK_API_BASE_URL}/${taskId}`;
-      const response = await fetch(taskUrl, {
+      const response = await fetchWithTimeout(taskUrl, {
+        timeout: TIMEOUT.QUICK,
         method: "GET",
         headers: {
           "Content-Type": "application/json",

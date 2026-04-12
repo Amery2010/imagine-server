@@ -1,6 +1,7 @@
 import type { Context } from "hono";
 import { BaseProvider, type ModelConfig } from "./base";
-import { runWithTokenRetry } from "../api/token-manager";
+import { runWithTokenRetry, encryptTokenForStorage } from "../api/token-manager";
+import { fetchWithTimeout, TIMEOUT } from "../utils/fetch-with-timeout";
 
 const DEFAULT_GEMINI_API_BASE =
   "https://generativelanguage.googleapis.com/v1beta";
@@ -201,9 +202,10 @@ export class GeminiProvider extends BaseProvider {
       const { model, prompt } = params;
       const modelId = this.getApiModelId(model);
 
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `${env.GEMINI_API_BASE || DEFAULT_GEMINI_API_BASE}/models/${modelId}:generateContent`,
         {
+          timeout: TIMEOUT.LONG,
           method: "POST",
           headers: {
             "x-goog-api-key": token,
@@ -275,9 +277,10 @@ export class GeminiProvider extends BaseProvider {
       const base64Image = Buffer.from(arrayBuffer).toString("base64");
       const mimeType = file.type || "image/png";
 
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `${env.GEMINI_API_BASE || DEFAULT_GEMINI_API_BASE}/models/${modelId}:generateContent`,
         {
+          timeout: TIMEOUT.LONG,
           method: "POST",
           headers: {
             "x-goog-api-key": token,
@@ -349,9 +352,10 @@ export class GeminiProvider extends BaseProvider {
       const { model, prompt } = params;
       const modelId = this.getApiModelId(model);
 
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `${env.GEMINI_API_BASE || DEFAULT_GEMINI_API_BASE}/models/${modelId}:streamGenerateContent?alt=sse`,
         {
+          timeout: TIMEOUT.SHORT,
           method: "POST",
           headers: {
             "x-goog-api-key": token,
@@ -403,7 +407,7 @@ export class GeminiProvider extends BaseProvider {
 
       if (imageUrl) {
         // image2video 模式：下载图片并转为 base64，使用 referenceImages 格式
-        const imageResponse = await fetch(imageUrl);
+        const imageResponse = await fetchWithTimeout(imageUrl, { timeout: TIMEOUT.DEFAULT });
         if (!imageResponse.ok) {
           throw new Error(`Failed to download image: ${imageResponse.status}`);
         }
@@ -422,9 +426,10 @@ export class GeminiProvider extends BaseProvider {
         ];
       }
 
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `${env.GEMINI_API_BASE || DEFAULT_GEMINI_API_BASE}/models/${modelId}:predictLongRunning`,
         {
+          timeout: TIMEOUT.SHORT,
           method: "POST",
           headers: {
             "x-goog-api-key": token,
@@ -452,13 +457,14 @@ export class GeminiProvider extends BaseProvider {
 
       // operation name 作为 taskId 存入 KV
       const taskId = operationName;
+      const encryptedToken = await encryptTokenForStorage(token!, env);
       await env.VIDEO_TASK_KV.put(
         taskId,
         JSON.stringify({
           status: "processing",
           id: taskId,
           provider: "gemini",
-          token,
+          token: encryptedToken,
           operationName,
           createdAt: new Date().toISOString(),
         }),
@@ -480,9 +486,10 @@ export class GeminiProvider extends BaseProvider {
 
     try {
       // 查询 operation 状态
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `${env.GEMINI_API_BASE || DEFAULT_GEMINI_API_BASE}/${taskId}`,
         {
+          timeout: TIMEOUT.QUICK,
           headers: { "x-goog-api-key": token },
         },
       );
@@ -520,7 +527,8 @@ export class GeminiProvider extends BaseProvider {
         }
 
         // 下载视频（需 API key 认证，跟随重定向）
-        const videoResponse = await fetch(videoUri, {
+        const videoResponse = await fetchWithTimeout(videoUri, {
+          timeout: TIMEOUT.DEFAULT,
           headers: { "x-goog-api-key": token },
           redirect: "follow",
         });

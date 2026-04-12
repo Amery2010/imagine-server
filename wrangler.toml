@@ -21,11 +21,12 @@ binding = "TOKEN_STATUS_KV"
 id = "e8873180969f481fb8e3d90b42d8c028"  # 本地开发：运行 wrangler kv:namespace create "TOKEN_STATUS_KV" 获取
 preview_id = "e8873180969f481fb8e3d90b42d8c028"  # 本地开发：运行 wrangler kv:namespace create "TOKEN_STATUS_KV" --preview 获取
 
-# 视频任务存储 - 用于存储异步视频生成任务状态
+# 视频任务存储 - 用于存储异步视频/图片生成任务状态
+# ⚠️ 生产环境建议使用独立的 namespace ID（运行 wrangler kv:namespace create "VIDEO_TASK_KV"）
 [[kv_namespaces]]
 binding = "VIDEO_TASK_KV"
-id = "e8873180969f481fb8e3d90b42d8c028"  # 本地开发：运行 wrangler kv:namespace create "VIDEO_TASK_KV" 获取
-preview_id = "e8873180969f481fb8e3d90b42d8c028"  # 本地开发：运行 wrangler kv:namespace create "VIDEO_TASK_KV" --preview 获取
+id = "e8873180969f481fb8e3d90b42d8c028"  # TODO: 替换为独立的 namespace ID
+preview_id = "e8873180969f481fb8e3d90b42d8c028"  # TODO: 替换为独立的 preview namespace ID
 
 # 环境变量
 [vars]
